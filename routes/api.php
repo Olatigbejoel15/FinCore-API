@@ -1,10 +1,8 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-// First test route for FinCore API
-Route::get('/test', function() {
-    return response()->json([
-        'message' => 'FinCore API is working!'
-    ]);
-});
+// Authentication routes
+Route::post('/register', [AuthController::class, 'register']); // Register user
+Route::post('/login', [AuthController::class, 'login']); // Login user
