@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\TransferController;
 use Illuminate\Support\Facades\Route;
 
 // Authentication routes
@@ -16,4 +17,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/deposit', [TransactionController::class, 'deposit']); // Deposit funds
     Route::post('/withdraw', [TransactionController::class, 'withdraw']); // Withdraw funds
     Route::get('/transactions', [TransactionController::class, 'history']); // View transaction history
+    Route::post('/transfer', [TransferController::class, 'transfer']); // Transfer money to another user
+
 });

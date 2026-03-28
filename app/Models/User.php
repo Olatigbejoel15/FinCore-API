@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'balance', // Allow balance to be mass assigned
+        'is_frozen', // Allow account restriction status to be updated
 
     ];
 
