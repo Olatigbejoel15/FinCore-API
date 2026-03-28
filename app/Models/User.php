@@ -22,6 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'balance', // Allow balance to be mass assigned
+
     ];
 
     /**
