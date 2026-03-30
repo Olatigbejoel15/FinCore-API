@@ -3,6 +3,8 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\TransferController;
+use App\Http\Controllers\AdminController;
+use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
 // Authentication routes
@@ -19,4 +21,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/transactions', [TransactionController::class, 'history']); // View transaction history
     Route::post('/transfer', [TransferController::class, 'transfer']); // Transfer money to another user
 
+});
+
+Route::middleware(['auth:sanctum', AdminMiddleware::class])->prefix('admin')->group(function () {
+    Route::get('/users', [AdminController::class, 'allUsers']);
+    Route::post('/users/{id}/freeze', [AdminController::class, 'toggleFreeze']);
+    Route::post('/users/{id}/credit', [AdminController::class, 'creditUser']);
+    Route::post('/users/{id}/debit', [AdminController::class, 'debitUser']);
 });

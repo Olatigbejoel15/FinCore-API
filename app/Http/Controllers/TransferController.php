@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Transaction;
 
@@ -11,78 +12,107 @@ class TransferController extends Controller
     // Transfer money from authenticated user to another user
     public function transfer(Request $request)
     {
-        // Validate incoming request
+        // -------------------------------
+        // Step 1: Validate incoming request
+        // -------------------------------
         $request->validate([
-            'recipient_email' => 'required|email|exists:users,email',
+            'recipient_email' => 'required|email',
             'amount' => 'required|numeric|min:1',
             'description' => 'nullable|string',
         ]);
 
-        // Get the authenticated sender
+        // -------------------------------
+        // Step 2: Get authenticated sender
+        // -------------------------------
         $sender = $request->user();
 
-        // Restriction check: block transfer if account is frozen
+        // -------------------------------
+        // Step 3: Restriction check
+        // -------------------------------
         if ($sender->is_frozen) {
             return response()->json([
                 'message' => 'Account restricted. Contact your account officer.'
             ], 403);
         }
 
-        // Prevent user from sending money to themselves
+        // -------------------------------
+        // Step 4: Prevent self-transfer
+        // -------------------------------
         if ($sender->email === $request->recipient_email) {
             return response()->json([
                 'message' => 'You cannot transfer money to your own account.'
             ], 400);
         }
 
-        // Find the recipient by email
+        // -------------------------------
+        // Step 5: Find recipient
+        // -------------------------------
         $recipient = User::where('email', $request->recipient_email)->first();
 
         if (!$recipient) {
-            // Return an error if the email is not in the database
             return response()->json([
-                'success' => false,
                 'message' => 'Recipient not found.'
-            ], 404); // 404 Not Found
+            ], 404);
         }
 
-        // Check if sender has enough balance
+        // -------------------------------
+        // Step 6: Check sender balance
+        // -------------------------------
         if ($sender->balance < $request->amount) {
             return response()->json([
-                'message' => 'Insufficient balance'
+                'message' => 'Insufficient balance.'
             ], 400);
         }
 
-        // Deduct amount from sender
-        $sender->balance -= $request->amount;
-        $sender->save();
+        try {
+            // -------------------------------
+            // Step 7: Start database transaction
+            // -------------------------------
+            DB::transaction(function () use ($sender, $recipient, $request) {
 
-        // Add amount to recipient
-        $recipient->balance += $request->amount;
-        $recipient->save();
+                // Deduct from sender
+                $sender->balance -= $request->amount;
+                $sender->save();
 
-        // Save sender transaction
-        Transaction::create([
-            'user_id' => $sender->id,
-            'type' => 'transfer_out',
-            'amount' => $request->amount,
-            'description' => $request->description ?? 'Transfer sent to ' . $recipient->email,
-        ]);
+                // Add to recipient
+                $recipient->balance += $request->amount;
+                $recipient->save();
 
-        // Save recipient transaction
-        Transaction::create([
-            'user_id' => $recipient->id,
-            'type' => 'transfer_in',
-            'amount' => $request->amount,
-            'description' => $request->description ?? 'Transfer received from ' . $sender->email,
-        ]);
+                // Save sender transaction
+                Transaction::create([
+                    'user_id' => $sender->id,
+                    'type' => 'transfer_out',
+                    'amount' => $request->amount,
+                    'description' => $request->description ?? 'Transfer sent to ' . $recipient->email,
+                ]);
 
-        // Return success response
-        return response()->json([
-            'message' => 'Transfer successful',
-            'sender_balance' => $sender->balance,
-            'recipient' => $recipient->email,
-            'amount_sent' => $request->amount
-        ]);
+                // Save recipient transaction
+                Transaction::create([
+                    'user_id' => $recipient->id,
+                    'type' => 'transfer_in',
+                    'amount' => $request->amount,
+                    'description' => $request->description ?? 'Transfer received from ' . $sender->email,
+                ]);
+            });
+
+            // -------------------------------
+            // Step 8: Return success response
+            // -------------------------------
+            return response()->json([
+                'message' => 'Transfer successful.',
+                'sender_balance' => $sender->fresh()->balance,
+                'recipient' => $recipient->email,
+                'amount_sent' => $request->amount
+            ], 200);
+
+        } catch (\Exception $e) {
+            // -------------------------------
+            // Step 9: Catch unexpected errors
+            // -------------------------------
+            return response()->json([
+                'message' => 'Transfer failed. Please try again later.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
