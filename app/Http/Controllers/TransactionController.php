@@ -81,17 +81,31 @@ class TransactionController extends Controller
     // Fetch authenticated user's transaction history
     public function history(Request $request)
     {
-        // Get the currently authenticated user
-        $user = $request->user();
+        // Start query for authenticated user's transactions
+        $query = Transaction::where('user_id', $request->user()->id);
 
-        // Fetch user's transactions, latest first
-        $transactions = Transaction::where('user_id', $user->id)
-            ->latest()
-            ->get();
+        // Filter by transaction type if provided
+        if ($request->has('type') && $request->type != '') {
+            $query->where('type', $request->type);
+        }
 
-        // Return transaction history
-        return response()->json([
-            'transactions' => $transactions
-        ]);
+        // Search by description or type if provided
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', '%' . $search . '%')
+                ->orWhere('type', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Get per_page from request or default to 3
+        $perPage = $request->input('per_page', 3);
+
+        // Order latest first and paginate
+        $transactions = $query->latest()->paginate($perPage);
+
+        // Return paginated transactions
+        return response()->json($transactions);
     }
 }
