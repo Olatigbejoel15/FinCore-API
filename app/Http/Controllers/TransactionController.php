@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Resources\TransactionResource;
 use App\Models\Transaction;
+use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
@@ -106,6 +107,6 @@ class TransactionController extends Controller
         $transactions = $query->latest()->paginate($perPage);
 
         // Return paginated transactions
-        return response()->json($transactions);
+        return TransactionResource::collection($transactions);
     }
 }

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
+use App\Http\Resources\UserResource;
 use App\Models\Transaction;
+use App\Models\User;
+use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
@@ -12,7 +13,7 @@ class AdminController extends Controller
     public function allUsers()
     {
         $users = User::all(); // Fetch all users
-        return response()->json($users); // Return as JSON
+        return UserResource::collection($users); // Return as JSON
     }
 
     // 2️⃣ Freeze or unfreeze a user account
@@ -28,8 +29,8 @@ class AdminController extends Controller
         $user->save(); // Save changes to database
 
         return response()->json([
-            'message' => 'User status updated',
-            'user' => $user
+            'message' => $user->is_frozen ? 'User account frozen' : 'User account unfrozen',
+            'user' => new UserResource($user)
         ]);
     }
 
@@ -58,7 +59,7 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => 'User credited successfully',
-            'user' => $user
+            'user' => new UserResource($user)
         ]);
     }
 
@@ -90,7 +91,7 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => 'User debited successfully',
-            'user' => $user
+            'user' => new UserResource($user)
         ]);
     }
 }
