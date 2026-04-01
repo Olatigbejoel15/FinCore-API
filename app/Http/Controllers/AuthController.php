@@ -16,7 +16,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255', // Name is required
             'email' => 'required|email|unique:users', // Must be unique
-            'password' => 'required|min:6' // Minimum password length
+            'password' => 'required|confirmed|min:8' // Minimum password length
         ]);
 
         // Create new user in database

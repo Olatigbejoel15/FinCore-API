@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminAnalyticsController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
@@ -36,4 +37,5 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->prefix('admin')->gr
 });
 
 Route::middleware('auth:sanctum')->get('/statement', [StatementController::class, 'index']);
+Route::middleware('auth:sanctum')->get('/admin/analytics', [AdminAnalyticsController::class, 'index']);
 
