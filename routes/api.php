@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\StatementController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\TransferController;
-use App\Http\Controllers\AdminController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +23,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/transactions', [TransactionController::class, 'history']); // View transaction history
     Route::post('/transfer', [TransferController::class, 'transfer']); // Transfer money to another user
 
+    Route::get('/notifications', [NotificationController::class, 'index']);
+
 });
 
 Route::middleware(['auth:sanctum', AdminMiddleware::class])->prefix('admin')->group(function () {
@@ -28,4 +32,8 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->prefix('admin')->gr
     Route::post('/users/{id}/freeze', [AdminController::class, 'toggleFreeze']);
     Route::post('/users/{id}/credit', [AdminController::class, 'creditUser']);
     Route::post('/users/{id}/debit', [AdminController::class, 'debitUser']);
+
 });
+
+Route::middleware('auth:sanctum')->get('/statement', [StatementController::class, 'index']);
+

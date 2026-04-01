@@ -28,6 +28,15 @@ class AdminController extends Controller
         $user->is_frozen = !$user->is_frozen; // Toggle frozen status
         $user->save(); // Save changes to database
 
+        // Create notification for the user about the account status change
+        $this->createNotification(
+            $user->id,
+            $user->is_frozen ? 'Account Frozen' : 'Account Unfrozen',
+            $user->is_frozen
+                ? 'Your account has been restricted by admin.'
+                : 'Your account restriction has been removed by admin.'
+        );
+
         return response()->json([
             'message' => $user->is_frozen ? 'User account frozen' : 'User account unfrozen',
             'user' => new UserResource($user)
@@ -56,6 +65,13 @@ class AdminController extends Controller
             'amount' => $request->amount,
             'description' => $request->description ?? 'Admin credited account',
         ]);
+
+        // Create notification for the user about the credit
+        $this->createNotification(
+            $user->id,
+            'Admin Credit',
+            'Your account has been credited with ₦' . number_format($request->amount, 2) . ' by admin.'
+        );
 
         return response()->json([
             'message' => 'User credited successfully',
@@ -88,6 +104,13 @@ class AdminController extends Controller
             'amount' => $request->amount,
             'description' => $request->description ?? 'Admin debited account',
         ]);
+
+        // Create notification for the user about the debit
+        $this->createNotification(
+            $user->id,
+            'Admin Debit',
+            'Your account has been debited with ₦' . number_format($request->amount, 2) . ' by admin.'
+        );
 
         return response()->json([
             'message' => 'User debited successfully',

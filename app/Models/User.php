@@ -51,4 +51,9 @@ class User extends Authenticatable
             'balance' => 'decimal:2'
         ];
     }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

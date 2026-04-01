@@ -78,6 +78,19 @@ class TransferController extends Controller
                 $recipient->balance += $request->amount;
                 $recipient->save();
 
+                // Create notifications for sender
+                $this->createNotification(
+                    $sender->id,
+                    'Transfer Sent',
+                    'You sent ₦' . number_format($request->amount, 2) . ' to ' . $recipient->email
+                );
+                // Create notifications for recipient
+                $this->createNotification(
+                    $recipient->id,
+                    'Transfer Received',
+                    'You received ₦' . number_format($request->amount, 2) . ' from ' . $sender->email
+                );
+
                 // Save sender transaction
                 Transaction::create([
                     'user_id' => $sender->id,

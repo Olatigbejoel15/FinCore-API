@@ -32,6 +32,14 @@ class TransactionController extends Controller
             'description' => $request->description ?? 'Deposit made',
         ]);
 
+        // Create a notification for the user about the deposit
+
+        $this->createNotification(
+            $user->id,
+            'Deposit Successful',
+            'Your account has been credited with ₦' . number_format($request->amount, 2)
+        );
+
         // Return success response
         return response()->json([
             'message' => 'Deposit successful',
@@ -70,6 +78,13 @@ class TransactionController extends Controller
             'amount' => $request->amount,
             'description' => $request->description ?? 'Withdrawal made',
         ]);
+
+        // Create a notification for the user about the withdrawal
+        $this->createNotification(
+            $user->id,
+            'Withdrawal Successful',
+            'Your account has been debited with ₦' . number_format($request->amount, 2)
+        );
 
         // Return success response
         return response()->json([
